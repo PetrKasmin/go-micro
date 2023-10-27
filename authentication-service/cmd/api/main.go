@@ -1,7 +1,7 @@
 package main
 
 import (
-	"authentication/cmd/data"
+	"authentication/data"
 	"database/sql"
 	"fmt"
 	"log"
@@ -14,29 +14,32 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-const webPort = "8000"
+const webPort = "80"
 
-var counts int
+var counts int64
 
 type Config struct {
-	DB     *sql.DB
+	DB *sql.DB
 	Models data.Models
 }
 
 func main() {
 	log.Println("Starting authentication service")
+
+	// connect to DB
 	conn := connectToDB()
 	if conn == nil {
 		log.Panic("Can't connect to Postgres!")
 	}
 
+	// set up config
 	app := Config{
-		DB:     conn,
+		DB: conn,
 		Models: data.New(conn),
 	}
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", webPort),
+		Addr: fmt.Sprintf(":%s", webPort),
 		Handler: app.routes(),
 	}
 
@@ -78,7 +81,8 @@ func connectToDB() *sql.DB {
 			return nil
 		}
 
-		log.Println("Backing off two seconds...")
+		log.Println("Backing off for two seconds....")
 		time.Sleep(2 * time.Second)
+		continue
 	}
 }
